@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#183b3b">
+  <title>Screening Lab — Synthetic workflow demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #183b3b;
+      --ink-soft: #45615e;
+      --muted: #75827c;
+      --paper: #f2f0e9;
+      --card: #fffefa;
+      --line: #d9ded4;
+      --line-dark: #adc0b5;
+      --teal: #16766f;
+      --teal-wash: #e6f1ed;
+      --amber: #bd672e;
+      --amber-wash: #fbefe1;
+      --blue-wash: #edf1f2;
+      --red: #9c483d;
+      --shadow: 0 16px 42px rgba(24, 59, 59, .07);
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --sans: "Avenir Next", Avenir, "Noto Sans Thai", Tahoma, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 92% 4%, rgba(199, 218, 202, .52), transparent 34rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    button, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, select:focus-visible, a:focus-visible {
+      outline: 3px solid #d6874f;
+      outline-offset: 3px;
+    }
+    .page { max-width: 1500px; margin: 0 auto; padding: 0 44px 42px; }
+    .masthead {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(24, 59, 59, .16);
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+    .brand-mark {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      border-radius: 50% 50% 50% 8px; background: var(--ink); color: #f6f1e6;
+      font: 700 13px var(--mono); transform: rotate(-4deg);
+    }
+    .brand-name { font-size: 12px; line-height: 1.15; letter-spacing: .12em; font-weight: 800; text-transform: uppercase; }
+    .brand-name span { display: block; margin-top: 4px; color: var(--muted); font: 10px var(--mono); letter-spacing: .08em; }
+    .masthead-meta { display: flex; align-items: center; gap: 14px; }
+    .demo-stamp, .eyebrow, .micro, .stage-index, .case-kicker, .arm-number {
+      font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase;
+    }
+    .demo-stamp {
+      padding: 7px 10px; border: 1px solid #a9c2b5; border-radius: 3px;
+      color: #245a50; background: rgba(230, 241, 237, .72); font-size: 10px; font-weight: 700;
+    }
+    .lang-switch { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+    .lang-switch button { border: 0; border-radius: 999px; background: transparent; padding: 5px 9px; color: var(--muted); font: 700 11px var(--mono); cursor: pointer; }
+    .lang-switch button[aria-pressed="true"] { color: white; background: var(--ink); }
+
+    .hero { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(310px, .72fr); gap: 50px; padding: 52px 0 36px; align-items: end; }
+    .eyebrow { margin: 0 0 14px; color: var(--teal); font-size: 10px; font-weight: 800; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin: 0; max-width: 800px; font: 500 clamp(42px, 5vw, 72px)/.99 var(--serif); letter-spacing: -.04em; }
+    .hero-copy { max-width: 680px; margin: 19px 0 0; color: var(--ink-soft); font-size: 16px; }
+    .thesis-card { position: relative; padding: 21px 24px 22px; background: var(--ink); color: #f8f5ed; border-radius: 5px 22px 5px 5px; box-shadow: var(--shadow); overflow: hidden; }
+    .thesis-card::after { content: ""; position: absolute; width: 150px; height: 150px; right: -46px; top: -55px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; box-shadow: 0 0 0 17px rgba(255,255,255,.025), 0 0 0 34px rgba(255,255,255,.025); }
+    .thesis-card .micro { margin: 0 0 11px; color: #b9d5c8; font-size: 9px; }
+    .thesis-card strong { display: block; max-width: 390px; font: 500 20px/1.33 var(--serif); }
+    .thesis-card p { margin: 11px 0 0; max-width: 400px; color: #d2ddd5; font-size: 12px; }
+
+    .stage-rail { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 0 26px; border-top: 1px solid var(--line-dark); border-bottom: 1px solid var(--line-dark); }
+    .stage { position: relative; display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 10px 16px 10px 0; color: var(--muted); }
+    .stage:not(:last-child)::after { content: ""; position: absolute; right: 18px; top: 27px; width: 24px; height: 1px; background: var(--line-dark); }
+    .stage-index { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 auto; border: 1px solid var(--line-dark); border-radius: 50%; font-size: 9px; }
+    .stage-label { font-size: 11px; line-height: 1.2; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+    .stage.is-current { color: var(--ink); }
+    .stage.is-current .stage-index { border-color: var(--teal); color: white; background: var(--teal); }
+    .stage.is-done .stage-index { border-color: var(--teal); color: var(--teal); }
+
+    .controls-row { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 0 0 15px; }
+    .case-tabs { display: flex; gap: 9px; }
+    .case-tab {
+      min-width: 208px; display: flex; align-items: center; gap: 11px; text-align: left;
+      padding: 9px 14px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,254,250,.62); cursor: pointer; transition: .18s ease;
+    }
+    .case-tab:hover { border-color: var(--teal); transform: translateY(-1px); }
+    .case-tab[aria-pressed="true"] { border-color: var(--ink); background: var(--card); box-shadow: 0 5px 12px rgba(24,59,59,.08); }
+    .case-tab .tab-no { color: var(--teal); font: 10px var(--mono); }
+    .case-tab .tab-title { display: block; font-size: 12px; font-weight: 800; }
+    .case-tab .tab-detail { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .experiment-control { display: flex; align-items: center; gap: 12px; }
+    .experiment-label { margin: 0; color: var(--muted); font: 9px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .experiment-switch { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 5px; background: var(--card); }
+    .experiment-switch button { padding: 7px 10px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; font: 700 10px var(--mono); cursor: pointer; }
+    .experiment-switch button[aria-pressed="true"] { color: white; background: var(--teal); }
+
+    .workbench { display: grid; grid-template-columns: minmax(245px, .76fr) minmax(0, 2.24fr); gap: 16px; align-items: start; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 7px; box-shadow: 0 8px 24px rgba(24,59,59,.035); }
+    .case-panel { padding: 22px 21px 20px; }
+    .case-kicker { margin: 0 0 10px; color: var(--teal); font-size: 9px; font-weight: 800; }
+    .case-panel h2 { margin: 0 0 12px; font: 500 28px/1.08 var(--serif); letter-spacing: -.025em; }
+    .case-summary { margin-bottom: 21px; color: var(--ink-soft); font-size: 12px; }
+    .question-box { margin: 0 0 18px; padding: 14px; border-left: 3px solid var(--amber); background: var(--amber-wash); }
+    .question-box .micro { display: block; margin-bottom: 7px; color: #8a512f; font-size: 9px; }
+    .question-box strong { display: block; font: 500 17px/1.35 var(--serif); }
+    .case-facts { display: grid; gap: 10px; margin: 0 0 19px; }
+    .fact { display: grid; grid-template-columns: 85px 1fr; gap: 10px; padding-bottom: 9px; border-bottom: 1px solid #edf0e9; }
+    .fact dt { color: var(--muted); font: 9px/1.4 var(--mono); text-transform: uppercase; }
+    .fact dd { margin: 0; font-size: 11px; font-weight: 700; }
+    .route-head { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 9px; }
+    .route-head h3 { margin: 0; font: 700 12px var(--sans); }
+    .route-head span { color: var(--amber); font: 9px var(--mono); text-transform: uppercase; }
+    .route-options { display: grid; gap: 6px; }
+    .route-option { display: grid; grid-template-columns: 15px 1fr; gap: 9px; width: 100%; text-align: left; padding: 9px; border: 1px solid var(--line); border-radius: 4px; background: transparent; cursor: pointer; }
+    .route-option:hover { border-color: var(--teal); }
+    .route-option[aria-pressed="true"] { border-color: var(--teal); background: var(--teal-wash); }
+    .route-dot { width: 10px; height: 10px; margin-top: 4px; border: 1px solid #9cae9f; border-radius: 50%; }
+    .route-option[aria-pressed="true"] .route-dot { border: 3px solid var(--teal); background: white; }
+    .route-option strong { display: block; font-size: 10px; }
+    .route-option small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+    .route-explainer { margin: 9px 0 0; min-height: 54px; color: var(--ink-soft); font-size: 10px; line-height: 1.45; }
+    .route-boundary { margin: 13px 0 0; padding-top: 12px; border-top: 1px dashed var(--line-dark); color: var(--muted); font-size: 10px; }
+
+    .main-column { min-width: 0; display: grid; gap: 14px; }
+    .arm-section { padding: 18px 19px 19px; }
+    .section-heading { display: flex; align-items: start; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
+    .section-heading h2 { margin: 0 0 3px; font: 500 22px/1.15 var(--serif); }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 10px; }
+    .stage-note { max-width: 270px; padding: 7px 9px; border: 1px solid #c8d8cd; border-radius: 3px; color: #326259; background: #eff5f0; font: 9px/1.4 var(--mono); }
+    .arms-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .arm-card {
+      position: relative; min-width: 0; min-height: 147px; text-align: left; padding: 13px 12px 12px;
+      border: 1px solid var(--line); border-radius: 5px; background: #fffefa; cursor: pointer; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .arm-card:hover { transform: translateY(-2px); border-color: var(--teal); }
+    .arm-card[aria-pressed="true"] { border: 1.5px solid var(--teal); box-shadow: inset 0 3px 0 var(--teal), 0 6px 16px rgba(24,59,59,.07); background: #fbfdfa; }
+    .arm-number { display: flex; justify-content: space-between; color: var(--muted); font-size: 8px; }
+    .arm-number .arm-marker { color: var(--teal); }
+    .arm-card h3 { min-height: 34px; margin: 12px 0 8px; font-size: 12px; line-height: 1.3; }
+    .arm-mini-evidence { display: block; min-height: 28px; color: var(--ink-soft); font-size: 9px; line-height: 1.4; }
+    .arm-result { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #edf0e9; }
+    .band { color: var(--teal); font: 700 9px var(--mono); text-transform: uppercase; }
+    .band.is-attention { color: var(--amber); }
+    .extra-pill { padding: 3px 5px; border-radius: 2px; color: #87502f; background: var(--amber-wash); font: 8px var(--mono); text-transform: uppercase; white-space: nowrap; }
+    .extra-pill.is-none { color: #326259; background: var(--teal-wash); }
+
+    .detail-panel { overflow: hidden; }
+    .detail-header { display: flex; justify-content: space-between; align-items: start; gap: 20px; padding: 17px 20px 15px; border-bottom: 1px solid var(--line); }
+    .detail-header .micro { margin: 0 0 5px; color: var(--teal); font-size: 9px; }
+    .detail-header h2 { margin: 0; font: 500 23px/1.15 var(--serif); }
+    .illustrative-tag { flex: 0 0 auto; padding: 6px 8px; border: 1px solid #e4c8a7; border-radius: 3px; color: #89572f; background: #fff7eb; font: 8px var(--mono); text-transform: uppercase; }
+    .flow-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .flow-card { position: relative; min-width: 0; padding: 17px 15px 16px; border-right: 1px solid var(--line); }
+    .flow-card:last-child { border-right: 0; }
+    .flow-card:not(:last-child)::after { content: ""; position: absolute; right: -5px; top: 30px; z-index: 1; width: 9px; height: 9px; border-top: 1px solid #92a69b; border-right: 1px solid #92a69b; background: var(--card); transform: rotate(45deg); }
+    .flow-card .micro { min-height: 20px; margin: 0 0 10px; color: var(--muted); font-size: 8px; }
+    .flow-card h3 { margin: 0 0 8px; font-size: 12px; line-height: 1.3; }
+    .flow-value { display: inline-block; margin: 0 0 8px; padding: 4px 6px; border-radius: 2px; background: var(--blue-wash); color: var(--ink); font: 700 9px var(--mono); text-transform: uppercase; }
+    .flow-value.good { color: #23695c; background: var(--teal-wash); }
+    .flow-value.warn { color: #89572f; background: var(--amber-wash); }
+    .flow-card p { margin: 0; color: var(--ink-soft); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+    .flow-card .source-meta { margin-top: 8px; padding-top: 8px; border-top: 1px solid #edf0e9; color: var(--muted); font-size: 9px; }
+    .human-card { background: #fcf7ee; }
+    .human-card .flow-value { background: #f7e5d1; color: #824d2a; }
+    .decision-form { display: flex; align-items: center; gap: 10px; padding: 13px 19px; border-top: 1px solid var(--line); background: #faf9f4; }
+    .decision-form label { flex: 0 0 auto; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+    .decision-form select { min-width: 0; flex: 1; padding: 9px 11px; border: 1px solid var(--line-dark); border-radius: 3px; color: var(--ink); background: white; font-size: 11px; }
+    .decision-form button { padding: 9px 13px; border: 0; border-radius: 3px; color: white; background: var(--ink); font-size: 10px; font-weight: 800; cursor: pointer; transition: background .15s ease; }
+    .decision-form button:hover { background: var(--teal); }
+    .receipt { display: none; padding: 10px 19px; color: #28675c; background: var(--teal-wash); font-size: 10px; }
+    .receipt.is-visible { display: block; }
+
+    .bottom-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 14px; }
+    .compare-panel, .measure-panel { padding: 17px 19px; }
+    .compare-panel h2, .measure-panel h2 { margin: 0 0 5px; font: 500 21px/1.2 var(--serif); }
+    .compare-panel > p, .measure-panel > p { margin: 0 0 12px; color: var(--muted); font-size: 10px; }
+    .compare-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .compare-item { min-height: 78px; padding: 9px; border: 1px solid var(--line); border-radius: 4px; }
+    .compare-item strong { display: block; margin-bottom: 5px; color: var(--teal); font: 700 9px var(--mono); }
+    .compare-item span { display: block; color: var(--ink-soft); font-size: 9px; line-height: 1.4; }
+    .measure-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .measure { padding: 10px; border-left: 2px solid var(--teal); background: #f3f6f1; }
+    .measure strong { display: block; font: 500 17px var(--serif); }
+    .measure span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
+    .gate-note { margin: 12px 0 0; padding: 10px 11px; border-left: 2px solid var(--amber); color: #6d5745; background: #fcf3e9; font-size: 9px; line-height: 1.45; }
+    .footer { display: flex; justify-content: space-between; gap: 24px; padding: 19px 0 0; color: var(--muted); font-size: 9px; }
+    .footer strong { color: var(--ink-soft); }
+    .footer .mono { font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 1100px) {
+      .page { padding: 0 25px 32px; }
+      .hero { gap: 25px; }
+      .workbench { grid-template-columns: 255px minmax(0, 1fr); }
+      .arms-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .arm-card { min-height: 130px; }
+      .flow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow-card:nth-child(2) { border-right: 0; }
+      .flow-card:nth-child(2)::after { display: none; }
+      .flow-card:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .bottom-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 740px) {
+      body { font-size: 14px; }
+      .page { padding: 0 15px 25px; }
+      .masthead { min-height: 62px; }
+      .demo-stamp { display: none; }
+      .hero { grid-template-columns: 1fr; gap: 22px; padding: 37px 0 25px; }
+      h1 { font-size: clamp(42px, 12vw, 60px); }
+      .hero-copy { font-size: 14px; }
+      .thesis-card { padding: 17px 18px; }
+      .stage { min-height: 55px; gap: 6px; padding-right: 2px; }
+      .stage:not(:last-child)::after { display: none; }
+      .stage-index { width: 21px; height: 21px; font-size: 8px; }
+      .stage-label { font-size: 8px; }
+      .controls-row { align-items: stretch; flex-direction: column; gap: 12px; }
+      .case-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+      .case-tab { min-width: 0; padding: 9px 8px; }
+      .case-tab .tab-detail { font-size: 9px; }
+      .experiment-control { justify-content: space-between; }
+      .workbench { grid-template-columns: 1fr; }
+      .case-panel { padding: 18px; }
+      .case-summary { margin-bottom: 13px; }
+      .route-explainer { min-height: 0; }
+      .section-heading { flex-direction: column; }
+      .stage-note { max-width: none; }
+      .arm-section { padding: 16px 13px; }
+      .arm-card { padding: 11px 9px; }
+      .arm-card h3 { font-size: 11px; }
+      .arm-mini-evidence { font-size: 8px; }
+      .extra-pill { font-size: 7px; }
+      .detail-header { padding: 15px; }
+      .illustrative-tag { max-width: 115px; text-align: center; line-height: 1.4; }
+      .flow-card { padding: 13px 11px; }
+      .flow-card h3 { font-size: 11px; }
+      .decision-form { align-items: stretch; flex-direction: column; padding: 13px 15px; }
+      .decision-form select, .decision-form button { width: 100%; }
+      .compare-list { grid-template-columns: repeat(2, 1fr); }
+      .measure-list { grid-template-columns: 1fr; }
+      .footer { flex-direction: column; gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <a class="brand" href="#top" aria-label="Screening Lab home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-name"><span data-en="Thailand · Investor screening" data-th="ประเทศไทย · การตรวจสอบผู้ลงทุน">Thailand · Investor screening</span><span data-en="Field prototype / 01" data-th="ต้นแบบการทำงาน / 01">Field prototype / 01</span></span>
+      </a>
+      <div class="masthead-meta">
+        <span class="demo-stamp" data-en="Synthetic data · no live connections" data-th="ข้อมูลสังเคราะห์ · ไม่เชื่อมต่อระบบจริง">Synthetic data · no live connections</span>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="th" aria-pressed="false">TH</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow" data-en="The operating model · Interactive walk-through" data-th="รูปแบบการทำงาน · ทดลองเดินตามขั้นตอน">The operating model · Interactive walk-through</p>
+          <h1 id="hero-title" data-en="Evidence first.<br>Decisions stay human." data-th="เริ่มจากหลักฐาน<br>คนยังเป็นผู้ตัดสินใจ">Evidence first.<br>Decisions stay human.</h1>
+          <p class="hero-copy" data-en="Follow one defined question from the route it takes to the source’s answer, firm-level triage and a recorded human decision. Replay the same synthetic case through four workflows." data-th="ติดตามคำถามที่กำหนดชัด ตั้งแต่การเลือกช่องทาง คำตอบจากแหล่งข้อมูล การจัดลำดับความเสี่ยงของบริษัท จนถึงคำตัดสินใจของเจ้าหน้าที่ แล้วทดลองกรณีสังเคราะห์เดียวกันผ่านสี่แนวทาง">Follow one defined question from the route it takes to the source’s answer, firm-level triage and a recorded human decision. Replay the same synthetic case through four workflows.</p>
+        </div>
+        <aside class="thesis-card" aria-label="Design principle">
+          <p class="micro" data-en="Design principle / 01" data-th="หลักการออกแบบ / 01">Design principle / 01</p>
+          <strong data-en="Reuse the route that fits. Add shared infrastructure only after the gap is proven." data-th="ใช้ช่องทางเดิมที่เหมาะสม พิจารณาระบบร่วมเมื่อพิสูจน์แล้วว่าช่องทางเดิมไม่พอ">Reuse the route that fits. Add shared infrastructure only after the gap is proven.</strong>
+          <p data-en="A route carries a request. The source answers. The firm triages. A person decides." data-th="ช่องทางส่งคำขอ แหล่งข้อมูลตอบ บริษัทจัดลำดับความเสี่ยง และคนตัดสินใจ">A route carries a request. The source answers. The firm triages. A person decides.</p>
+        </aside>
+      </section>
+
+      <nav class="stage-rail" aria-label="Four functions in the screening process">
+        <div class="stage is-current" data-stage="route"><span class="stage-index">01</span><span class="stage-label" data-en="Request route" data-th="ช่องทางส่งคำขอ">Request route</span></div>
+        <div class="stage" data-stage="evidence"><span class="stage-index">02</span><span class="stage-label" data-en="Source answer" data-th="คำตอบจากแหล่งข้อมูล">Source answer</span></div>
+        <div class="stage" data-stage="triage"><span class="stage-index">03</span><span class="stage-label" data-en="Firm triage" data-th="จัดลำดับความเสี่ยง">Firm triage</span></div>
+        <div class="stage" data-stage="decision"><span class="stage-index">04</span><span class="stage-label" data-en="Human decision" data-th="คนตัดสินใจ">Human decision</span></div>
+      </nav>
+
+      <div class="controls-row">
+        <div class="case-tabs" role="group" aria-label="Synthetic case">
+          <button class="case-tab" type="button" data-case="account" aria-pressed="true">
+            <span class="tab-no">A</span><span><span class="tab-title" data-en="Funding account" data-th="บัญชีที่ใช้โอนเงิน">Funding account</span><span class="tab-detail" data-en="Name match · source of funds" data-th="ชื่อบัญชี · แหล่งที่มาของเงิน">Name match · source of funds</span></span>
+          </button>
+          <button class="case-tab" type="button" data-case="ownership" aria-pressed="false">
+            <span class="tab-no">B</span><span><span class="tab-title" data-en="Ownership record" data-th="ทะเบียนผู้ถือหุ้น">Ownership record</span><span class="tab-detail" data-en="Filed record · current UBO" data-th="เอกสารที่ยื่น · UBO ปัจจุบัน">Filed record · current UBO</span></span>
+          </button>
+        </div>
+        <div class="experiment-control">
+          <p class="experiment-label" data-en="Pilot stage" data-th="ช่วงการทดลอง">Pilot stage</p>
+          <div class="experiment-switch" role="group" aria-label="Pilot experiment">
+            <button type="button" data-experiment="controlled" aria-pressed="true" data-en="A · CONTROLLED" data-th="A · ควบคุม">A · CONTROLLED</button>
+            <button type="button" data-experiment="operational" aria-pressed="false" data-en="B · OPERATIONAL" data-th="B · ใช้งานจริง">B · OPERATIONAL</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="workbench">
+        <aside class="panel case-panel" aria-labelledby="case-title">
+          <p class="case-kicker" id="case-kicker">SYNTHETIC CASE A · FUNDS</p>
+          <h2 id="case-title">Account name, not source legitimacy</h2>
+          <p class="case-summary" id="case-summary">A two-step check. First ask whether the account holder matches Company X. Keep the origin and legitimacy of the funds as separate questions.</p>
+          <div class="question-box">
+            <span class="micro" data-en="Defined question" data-th="คำถามที่กำหนด">Defined question</span>
+            <strong id="case-question">Does the funding-account name match Company X?</strong>
+          </div>
+          <dl class="case-facts" id="case-facts"></dl>
+
+          <div class="route-head"><h3 data-en="Choose a request route" data-th="เลือกช่องทางส่งคำขอ">Choose a request route</h3><span data-en="Simulated" data-th="จำลอง">Simulated</span></div>
+          <div class="route-options" role="group" aria-label="Request route">
+            <button class="route-option" type="button" data-route="direct" aria-pressed="true"><span class="route-dot"></span><span><strong data-en="Direct to source" data-th="ขอตรงจากแหล่งข้อมูล">Direct to source</strong><small data-en="Source’s own channel · sandbox reply" data-th="ช่องทางของแหล่งข้อมูล · คำตอบจำลอง">Source’s own channel · sandbox reply</small></span></button>
+            <button class="route-option" type="button" data-route="sdep" aria-pressed="false"><span class="route-dot"></span><span><strong data-en="SDEP as a service" data-th="ใช้บริการ SDEP">SDEP as a service</strong><small data-en="Participating-firm scope only" data-th="เฉพาะขอบเขตระหว่างบริษัทที่เข้าร่วม">Participating-firm scope only</small></span></button>
+            <button class="route-option" type="button" data-route="components" aria-pressed="false"><span class="route-dot"></span><span><strong data-en="Reuse a component" data-th="นำส่วนประกอบไปใช้ซ้ำ">Reuse a component</strong><small data-en="Protocol, authentication or audit pattern" data-th="รูปแบบคำขอ ยืนยันตัวตน หรือบันทึกตรวจสอบ">Protocol, authentication or audit pattern</small></span></button>
+            <button class="route-option" type="button" data-route="shared" aria-pressed="false"><span class="route-dot"></span><span><strong data-en="Shared request layer" data-th="ช่องทางคำขอร่วม">Shared request layer</strong><small data-en="Conditional · only after route tests" data-th="พิจารณาเมื่อทดสอบช่องทางเดิมแล้ว">Conditional · only after route tests</small></span></button>
+          </div>
+          <p class="route-explainer" id="route-explainer" aria-live="polite"></p>
+          <p class="route-boundary" data-en="A new layer cannot create legal authority or make a source answer true." data-th="ช่องทางใหม่สร้างอำนาจเปิดเผยข้อมูลหรือรับรองคำตอบจากต้นทางไม่ได้">A new layer cannot create legal authority or make a source answer true.</p>
+        </aside>
+
+        <div class="main-column">
+          <section class="panel arm-section" aria-labelledby="arms-title">
+            <div class="section-heading">
+              <div><p class="eyebrow" data-en="Same case · four workflows" data-th="กรณีเดียวกัน · สี่แนวทาง">Same case · four workflows</p><h2 id="arms-title" data-en="Select a pilot arm" data-th="เลือกแนวทางทดลอง">Select a pilot arm</h2><p data-en="The source reply is scripted. The final customer decision always stays with a person." data-th="คำตอบจากแหล่งข้อมูลเป็นบทจำลอง คนยังตัดสินใจเรื่องลูกค้าทุกกรณี">The source reply is scripted. The final customer decision always stays with a person.</p></div>
+              <div class="stage-note" id="experiment-note" aria-live="polite">A / controlled · Arms 2 and 4 share the same transparent rule and thresholds.</div>
+            </div>
+            <div class="arms-grid" id="arms-grid" role="group" aria-label="Pilot arms"></div>
+          </section>
+
+          <section class="panel detail-panel" aria-labelledby="detail-title" aria-live="polite">
+            <div class="detail-header">
+              <div><p class="micro" id="selected-arm-kicker">ARM 1 · CURRENT PROCESS</p><h2 id="detail-title">Walk the evidence to a decision</h2></div>
+              <span class="illustrative-tag" data-en="Illustrative output" data-th="ผลตัวอย่างจำลอง">Illustrative output</span>
+            </div>
+            <div class="flow-grid">
+              <article class="flow-card">
+                <p class="micro" data-en="01 / Route" data-th="01 / ช่องทาง">01 / Route</p>
+                <h3 id="flow-route-title">Source’s own channel</h3>
+                <p id="flow-route-copy"></p>
+              </article>
+              <article class="flow-card">
+                <p class="micro" data-en="02 / Evidence" data-th="02 / หลักฐาน">02 / Evidence</p>
+                <h3 data-en="Source-backed answer" data-th="คำตอบจากแหล่งข้อมูล">Source-backed answer</h3>
+                <span class="flow-value" id="evidence-status"></span>
+                <p id="evidence-copy"></p>
+                <p class="source-meta" id="evidence-meta"></p>
+              </article>
+              <article class="flow-card">
+                <p class="micro" data-en="03 / Firm triage" data-th="03 / จัดลำดับความเสี่ยง">03 / Firm triage</p>
+                <h3 id="triage-title">Current review process</h3>
+                <span class="flow-value" id="triage-band"></span>
+                <p id="triage-copy"></p>
+                <p class="source-meta" id="extra-review"></p>
+              </article>
+              <article class="flow-card human-card">
+                <p class="micro" data-en="04 / Human decision" data-th="04 / คนตัดสินใจ">04 / Human decision</p>
+                <h3 data-en="Reviewer owns the outcome" data-th="เจ้าหน้าที่รับผิดชอบผล">Reviewer owns the outcome</h3>
+                <span class="flow-value" data-en="Required · every case" data-th="ต้องมี · ทุกกรณี">Required · every case</span>
+                <p id="human-copy"></p>
+              </article>
+            </div>
+            <form class="decision-form" id="decision-form">
+              <label for="decision-select" data-en="Your synthetic-case decision" data-th="คำตัดสินใจในกรณีจำลอง">Your synthetic-case decision</label>
+              <select id="decision-select" required>
+                <option value="" data-en="Choose a human decision…" data-th="เลือกคำตัดสินใจของเจ้าหน้าที่…">Choose a human decision…</option>
+                <option value="normal" data-en="Continue ordinary process" data-th="ดำเนินขั้นตอนปกติต่อ">Continue ordinary process</option>
+                <option value="request" data-en="Request additional evidence" data-th="ขอหลักฐานเพิ่มเติม">Request additional evidence</option>
+                <option value="edd" data-en="Conduct enhanced due diligence" data-th="ตรวจสอบสถานะลูกค้าอย่างเข้มข้น (EDD)">Conduct enhanced due diligence</option>
+                <option value="hold" data-en="Hold and escalate for review" data-th="ระงับและส่งตรวจต่อ">Hold and escalate for review</option>
+              </select>
+              <button type="submit" data-en="Record human decision" data-th="บันทึกคำตัดสินใจ">Record human decision</button>
+            </form>
+            <div class="receipt" id="decision-receipt" role="status"></div>
+          </section>
+
+          <div class="bottom-grid">
+            <section class="panel compare-panel" aria-labelledby="compare-title">
+              <p class="eyebrow" data-en="Experimental logic" data-th="ตรรกะการทดลอง">Experimental logic</p>
+              <h2 id="compare-title" data-en="What each comparison can tell us" data-th="แต่ละการเปรียบเทียบบอกอะไร">What each comparison can tell us</h2>
+              <p data-en="Compare the same synthetic cases against one decision standard. These are questions to test, not results." data-th="ใช้กรณีสังเคราะห์ชุดเดียวกันและเกณฑ์ตัดสินใจเดียวกัน นี่คือคำถามที่จะทดสอบ ไม่ใช่ผลการทดลอง">Compare the same synthetic cases against one decision standard. These are questions to test, not results.</p>
+              <div class="compare-list">
+                <div class="compare-item"><strong>1 ↔ 2</strong><span data-en="Effect of scoring on current evidence" data-th="ผลของคะแนนเมื่อใช้ข้อมูลปัจจุบัน">Effect of scoring on current evidence</span></div>
+                <div class="compare-item"><strong>1 ↔ 3</strong><span data-en="Effect of better verified evidence" data-th="ผลของหลักฐานที่ยืนยันดีขึ้น">Effect of better verified evidence</span></div>
+                <div class="compare-item"><strong>2 ↔ 4</strong><span data-en="Does better evidence help scoring?" data-th="หลักฐานที่ดีขึ้นช่วยการให้คะแนนหรือไม่">Does better evidence help scoring?</span></div>
+                <div class="compare-item"><strong>ALL ARMS</strong><span data-en="Quality, extra work, privacy, security and cost" data-th="คุณภาพ งานตรวจเพิ่ม ความเป็นส่วนตัว ความปลอดภัย และต้นทุน">Quality, extra work, privacy, security and cost</span></div>
+              </div>
+            </section>
+            <section class="panel measure-panel" aria-labelledby="measure-title">
+              <p class="eyebrow" data-en="Measures · not populated with mock results" data-th="ตัวชี้วัด · ไม่ใส่ผลจำลอง">Measures · not populated with mock results</p>
+              <h2 id="measure-title" data-en="Count the work and the quality" data-th="วัดทั้งงานและคุณภาพ">Count the work and the quality</h2>
+              <p data-en="This prototype defines the measures; it does not claim pilot findings." data-th="ต้นแบบนี้แสดงตัวชี้วัด แต่ไม่ได้อ้างว่าเป็นผลการนำร่อง">This prototype defines the measures; it does not claim pilot findings.</p>
+              <div class="measure-list">
+                <div class="measure"><strong data-en="% requiring extra review" data-th="% ที่ต้องตรวจเพิ่ม">% requiring extra review</strong><span data-en="Share of cases needing additional human investigation." data-th="สัดส่วนกรณีที่เจ้าหน้าที่ต้องตรวจสอบเพิ่ม">Share of cases needing additional human investigation.</span></div>
+                <div class="measure"><strong data-en="Minutes / correct resolution" data-th="นาที / กรณีที่แก้ได้ถูกต้อง">Minutes / correct resolution</strong><span data-en="Reviewer time per correctly resolved case." data-th="เวลาที่เจ้าหน้าที่ใช้ต่อกรณีที่คลี่คลายได้ถูกต้อง">Reviewer time per correctly resolved case.</span></div>
+              </div>
+              <p class="gate-note" data-en="Advance only if quality holds or improves, extra investigation falls, and legal authority, privacy, explainability, security and recurring cost pass." data-th="ไปต่อเมื่อคุณภาพไม่ลดลง การตรวจเพิ่มลดลง และผ่านเกณฑ์กฎหมาย ความเป็นส่วนตัว คำอธิบาย ความปลอดภัย และต้นทุนประจำ">Advance only if quality holds or improves, extra investigation falls, and legal authority, privacy, explainability, security and recurring cost pass.</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer class="footer">
+      <span><strong data-en="Prototype boundary." data-th="ขอบเขตต้นแบบ">Prototype boundary.</strong> <span data-en="Every case and source reply is fictional. No personal data is collected. No bank, registry, SDEP or NDID connection is active." data-th="กรณีและคำตอบจากแหล่งข้อมูลเป็นเรื่องสมมติ ไม่มีการเก็บข้อมูลส่วนบุคคล และไม่มีการเชื่อมต่อธนาคาร ทะเบียน SDEP หรือ NDID">Every case and source reply is fictional. No personal data is collected. No bank, registry, SDEP or NDID connection is active.</span></span>
+      <span class="mono" data-en="Design study · v0.1" data-th="แบบทดลอง · v0.1">Design study · v0.1</span>
+    </footer>
+  </div>
+
+  <script>
+    const cases = {
+      account: {
+        kicker: { en: "SYNTHETIC CASE A · FUNDS", th: "กรณีสังเคราะห์ ก · แหล่งเงิน" },
+        title: { en: "Account name, not source legitimacy", th: "ยืนยันชื่อบัญชี ไม่ใช่ความชอบด้วยกฎหมายของเงิน" },
+        summary: { en: "A two-step check. First ask whether the account holder matches Company X. Keep the origin and legitimacy of the funds as separate questions.", th: "แยกคำถามเป็นสองส่วน เริ่มจากชื่อผู้ถือบัญชีตรงกับบริษัท X หรือไม่ แล้วตรวจที่มาและความชอบด้วยกฎหมายของเงินแยกต่างหาก" },
+        question: { en: "Does the funding-account name match Company X?", th: "ชื่อบัญชีที่ใช้โอนเงินตรงกับบริษัท X หรือไม่" },
+        facts: [
+          [{en:"Entity",th:"ผู้ลงทุน"},{en:"Company X · fictional",th:"บริษัท X · สมมติ"}],
+          [{en:"Known signal",th:"ข้อมูลที่มี"},{en:"No other seeded alert",th:"ไม่มีสัญญาณอื่นในกรณีจำลอง"}],
+          [{en:"Decision scope",th:"ขอบเขตการตัดสินใจ"},{en:"Account-name link only",th:"เฉพาะความเชื่อมโยงของชื่อบัญชี"}]
+        ],
+        current: {
+          status: {en:"CUSTOMER-PROVIDED · UNVERIFIED",th:"ลูกค้าให้มา · ยังไม่ยืนยัน"},
+          source: {en:"Applicant’s account letter",th:"หนังสือรับรองบัญชีที่ผู้สมัครให้มา"},
+          date: {en:"2026-08-02 · not independently checked",th:"2026-08-02 · ยังไม่ได้ตรวจสอบจากแหล่งอื่น"},
+          basis: {en:"Name text only",th:"เทียบจากข้อความชื่อเท่านั้น"},
+          limit: {en:"Does not verify the bank record, UBO or legitimacy of funds.",th:"ยังไม่ยืนยันข้อมูลกับธนาคาร ไม่ได้ยืนยัน UBO หรือความชอบด้วยกฎหมายของเงิน"}
+        },
+        verified: {
+          status: {en:"MATCH",th:"ตรงกัน (MATCH)"},
+          source: {en:"Bank K · scripted source reply",th:"ธนาคาร K · คำตอบจำลองจากแหล่งข้อมูล"},
+          date: {en:"2026-09-14 · current in this mock case",th:"2026-09-14 · เป็นปัจจุบันในกรณีจำลองนี้"},
+          basis: {en:"Company registration number + account-holder record",th:"เลขทะเบียนนิติบุคคล + ระเบียนผู้ถือบัญชี"},
+          limit: {en:"Authoritative only for this account-holder name. It does not establish UBO or whether funds are legitimate.",th:"ยืนยันได้เฉพาะชื่อผู้ถือบัญชี ไม่ได้ยืนยัน UBO หรือความชอบด้วยกฎหมายของเงิน"}
+        },
+        bandCurrent: {en:"MEDIUM",th:"ปานกลาง"},
+        currentReason: {en:"Account link is customer-provided and unverified.",th:"ข้อมูลความเชื่อมโยงบัญชีมาจากลูกค้าและยังไม่ได้ยืนยัน"},
+        bandVerified: {en:"ROUTINE",th:"ขั้นตอนปกติ"},
+        verifiedReason: {en:"The defined account-name question is answered; no other signal is seeded.",th:"ได้คำตอบเรื่องชื่อบัญชีตามที่ถาม และไม่มีสัญญาณอื่นในกรณีจำลอง"},
+        operationalVerifiedBand: {en:"MEDIUM",th:"ปานกลาง"},
+        operationalVerifiedReason: {en:"A firm’s own rule may still ask for separate source-of-funds evidence.",th:"หลักเกณฑ์ของบริษัทอาจกำหนดให้ขอหลักฐานแหล่งเงินแยกต่างหาก"},
+        extraCurrent: true,
+        extraVerifiedControlled: false,
+        extraVerifiedOperational: true,
+        routeTarget: {en:"Bank K · sandbox reply",th:"ธนาคาร K · คำตอบจากระบบทดลอง"}
+      },
+      ownership: {
+        kicker: { en: "SYNTHETIC CASE B · OWNERSHIP", th: "กรณีสังเคราะห์ ข · ผู้ถือหุ้น" },
+        title: { en: "A filed record is not a live UBO", th: "เอกสารที่ยื่นไม่ใช่ UBO ปัจจุบัน" },
+        summary: { en: "Check what the latest filed shareholder record says. Keep that answer separate from who ultimately owns or controls the company today.", th: "ตรวจว่าเอกสารผู้ถือหุ้นที่ยื่นล่าสุดระบุอะไร แยกคำตอบนั้นออกจากคำถามว่าใครเป็นเจ้าของหรือควบคุมบริษัทในปัจจุบัน" },
+        question: { en: "Does the latest filed record show North Star Holdings at 60%?", th: "เอกสารที่ยื่นล่าสุดระบุว่า North Star Holdings ถือหุ้น 60% หรือไม่" },
+        facts: [
+          [{en:"Entity",th:"นิติบุคคล"},{en:"Company X · fictional",th:"บริษัท X · สมมติ"}],
+          [{en:"Known signal",th:"ข้อมูลที่มี"},{en:"Natural-person UBO unresolved",th:"ยังไม่ทราบ UBO ซึ่งเป็นบุคคลธรรมดา"}],
+          [{en:"Decision scope",th:"ขอบเขตการตัดสินใจ"},{en:"Filed shareholder line",th:"รายการผู้ถือหุ้นที่ยื่นไว้"}]
+        ],
+        current: {
+          status: {en:"UNKNOWN · FILE COPY IS OLD",th:"ยังสรุปไม่ได้ · สำเนาเดิมเก่า"},
+          source: {en:"Firm file · DBD filing dated 2025-04-10",th:"แฟ้มบริษัท · เอกสาร DBD ลงวันที่ 2025-04-10"},
+          date: {en:"Latest copy held by the firm",th:"สำเนาล่าสุดที่บริษัทมี"},
+          basis: {en:"Company number + shareholder line",th:"เลขทะเบียนบริษัท + รายการผู้ถือหุ้น"},
+          limit: {en:"Cannot establish whether a newer filing exists or identify the current natural-person UBO.",th:"ยังบอกไม่ได้ว่ามีเอกสารฉบับใหม่กว่าหรือไม่ และไม่ระบุ UBO ปัจจุบันที่เป็นบุคคลธรรมดา"}
+        },
+        verified: {
+          status: {en:"MATCH · FILED RECORD",th:"ตรงกัน · เอกสารที่ยื่นไว้"},
+          source: {en:"DBD filed record · scripted source reply",th:"เอกสารที่ยื่นต่อ DBD · คำตอบจำลองจากแหล่งข้อมูล"},
+          date: {en:"2026-08-14 · latest filing in this mock case",th:"2026-08-14 · เอกสารล่าสุดในกรณีจำลองนี้"},
+          basis: {en:"Company registration number + reported shareholder line",th:"เลขทะเบียนนิติบุคคล + รายการผู้ถือหุ้นที่รายงาน"},
+          limit: {en:"An official filed record, not proof of live ownership or the natural-person UBO.",th:"เป็นเอกสารทางการที่ยื่นไว้ ไม่ใช่หลักฐานยืนยันเจ้าของปัจจุบันหรือ UBO ที่เป็นบุคคลธรรมดา"}
+        },
+        bandCurrent: {en:"HIGH",th:"สูง"},
+        currentReason: {en:"Ownership chain remains unresolved; file copy may be stale.",th:"ยังไม่ทราบสายการถือหุ้น และสำเนาเอกสารอาจไม่เป็นปัจจุบัน"},
+        bandVerified: {en:"MEDIUM",th:"ปานกลาง"},
+        verifiedReason: {en:"The filing is verified for the defined question; current UBO remains unresolved.",th:"ยืนยันเอกสารที่ยื่นตามคำถามได้ แต่ยังไม่ทราบ UBO ปัจจุบัน"},
+        operationalVerifiedBand: {en:"HIGH",th:"สูง"},
+        operationalVerifiedReason: {en:"The firm’s own rule keeps the unresolved UBO link in additional review.",th:"หลักเกณฑ์ของบริษัทให้ตรวจเพิ่มเพราะยังไม่ทราบความเชื่อมโยงกับ UBO"},
+        extraCurrent: true,
+        extraVerifiedControlled: true,
+        extraVerifiedOperational: true,
+        routeTarget: {en:"Company registry · simulated lookup",th:"ทะเบียนบริษัท · การค้นหาจำลอง"}
+      }
+    };
+
+    const arms = [
+      { id: 1, name: {en:"Current process",th:"กระบวนการปัจจุบัน"}, evidence: {en:"Information and review steps the firm uses today.",th:"ข้อมูลและขั้นตอนตรวจที่บริษัทใช้อยู่"}, short: {en:"Firm’s current file",th:"แฟ้มข้อมูลปัจจุบัน"} },
+      { id: 2, name: {en:"Current evidence + scoring",th:"ข้อมูลปัจจุบัน + คะแนน"}, evidence: {en:"Same current evidence, with firm-level triage.",th:"ใช้ข้อมูลปัจจุบันและหลักเกณฑ์จัดลำดับของบริษัท"}, short: {en:"Current evidence",th:"ข้อมูลปัจจุบัน"} },
+      { id: 3, name: {en:"Verified evidence only",th:"หลักฐานยืนยัน · ไม่ให้คะแนน"}, evidence: {en:"Source-backed answer, without a score.",th:"คำตอบจากแหล่งข้อมูล โดยไม่ใช้คะแนน"}, short: {en:"Source-backed answer",th:"คำตอบจากแหล่งข้อมูล"} },
+      { id: 4, name: {en:"Verified evidence + scoring",th:"หลักฐานยืนยัน + คะแนน"}, evidence: {en:"Source-backed answer, with explainable triage.",th:"คำตอบจากแหล่งข้อมูลและการจัดลำดับที่อธิบายได้"}, short: {en:"Verified + triage",th:"ยืนยัน + จัดลำดับ"} }
+    ];
+
+    const routeText = {
+      direct: {
+        title: {en:"Direct to source",th:"ขอตรงจากแหล่งข้อมูล"},
+        en: "Candidate route for a defined question. This walkthrough uses a sandbox reply; lawful authority and access would need to be confirmed before a live test.",
+        th: "ช่องทางที่อาจใช้กับคำถามที่กำหนดชัด ต้นแบบนี้ใช้คำตอบจากระบบทดลอง ก่อนทดสอบจริงต้องยืนยันฐานอำนาจและสิทธิเข้าถึง"
+      },
+      sdep: {
+        title: {en:"SDEP as a service",th:"ใช้บริการ SDEP"},
+        en: "SDEP is described for defined exchanges among participating securities firms. This bank or registry question is outside the evidenced scope; its reply remains simulated.",
+        th: "เอกสารอธิบาย SDEP ว่าใช้แลกเปลี่ยนข้อมูลตามขอบเขตระหว่างบริษัทหลักทรัพย์ที่เข้าร่วม คำถามถึงธนาคารหรือทะเบียนอยู่นอกขอบเขตที่มีหลักฐานรองรับ คำตอบจึงยังเป็นการจำลอง"
+      },
+      components: {
+        title: {en:"Reuse a component",th:"นำส่วนประกอบไปใช้ซ้ำ"},
+        en: "A request format, authentication or audit component may fit another route. Reusing a component does not make SDEP the cross-sector operator or establish a live connection.",
+        th: "อาจนำรูปแบบคำขอ ระบบยืนยันตัวตน หรือบันทึกตรวจสอบไปใช้กับช่องทางอื่น การนำส่วนประกอบไปใช้ไม่ได้ทำให้ SDEP เป็นผู้ดำเนินงานข้ามภาคส่วนหรือยืนยันว่ามีการเชื่อมต่อจริง"
+      },
+      shared: {
+        title: {en:"Shared request layer",th:"ช่องทางคำขอร่วม"},
+        en: "Consider only after testing existing routes and showing that none can perform a necessary function lawfully, reliably and economically.",
+        th: "พิจารณาหลังทดสอบช่องทางเดิมและพบว่าไม่มีช่องทางใดทำหน้าที่จำเป็นได้อย่างถูกกฎหมาย น่าเชื่อถือ และคุ้มค่า"
+      }
+    };
+
+    let language = "en";
+    let selectedCase = "account";
+    let selectedArm = 1;
+    let experiment = "controlled";
+    let selectedRoute = "direct";
+    const $ = (selector) => document.querySelector(selector);
+    const local = (value) => typeof value === "string" ? value : value[language];
+    const currentCase = () => cases[selectedCase];
+
+    function setLanguage(lang) {
+      language = lang;
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-en][data-th]").forEach((node) => {
+        const key = lang === "th" ? "data-th" : "data-en";
+        if (node.tagName === "OPTION") node.textContent = node.getAttribute(key);
+        else node.innerHTML = node.getAttribute(key);
+      });
+      document.querySelectorAll("[data-lang]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.lang === lang)));
+      render();
+    }
+
+    function triageFor(arm) {
+      const c = currentCase();
+      if (arm === 1) return { label: language === "en" ? "Current review" : "ขั้นตอนตรวจปัจจุบัน", band: language === "en" ? "NO NEW SCORE" : "ไม่มีคะแนนใหม่", reason: language === "en" ? "The firm follows its existing process and retains its final decision." : "บริษัทใช้ขั้นตอนปัจจุบันและรับผิดชอบคำตัดสินใจสุดท้าย", extra: true, extraText: language === "en" ? "Additional investigation: required in this mock path." : "การตรวจเพิ่ม: ต้องทำในขั้นตอนจำลองนี้" };
+      if (arm === 3) {
+        const extra = c.extraVerifiedControlled;
+        return { label: language === "en" ? "Evidence only · no score" : "หลักฐานเท่านั้น · ไม่มีคะแนน", band: language === "en" ? "NO SCORE" : "ไม่มีคะแนน", reason: language === "en" ? "A human reviewer applies ordinary firm procedures to the source answer and its limits." : "เจ้าหน้าที่ใช้ขั้นตอนปกติของบริษัทพิจารณาคำตอบและข้อจำกัด", extra, extraText: extra ? (language === "en" ? "Additional investigation: required; the wider question remains open." : "การตรวจเพิ่ม: ต้องทำ เพราะคำถามที่กว้างกว่ายังไม่มีคำตอบ") : (language === "en" ? "Additional investigation on this defined question: not indicated; ordinary processing continues." : "คำถามที่กำหนดนี้ไม่ต้องตรวจเพิ่ม แต่ยังดำเนินขั้นตอนปกติ") };
+      }
+      const scoredWithVerifiedEvidence = arm === 4;
+      const controlled = experiment === "controlled";
+      let band;
+      let reason;
+      let extra;
+      if (!scoredWithVerifiedEvidence || !controlled) {
+        band = local(c.bandCurrent);
+        reason = local(c.currentReason);
+        extra = true;
+      } else if (selectedCase === "account") {
+        band = local(c.bandVerified);
+        reason = local(c.verifiedReason);
+        extra = c.extraVerifiedControlled;
+      } else {
+        band = local(c.bandVerified);
+        reason = local(c.verifiedReason);
+        extra = c.extraVerifiedControlled;
+      }
+      if (experiment === "operational" && arm === 4) {
+        band = local(c.operationalVerifiedBand);
+        reason = local(c.operationalVerifiedReason);
+        extra = c.extraVerifiedOperational;
+      }
+      const attention = band === "MEDIUM" || band === "HIGH" || band === "ปานกลาง" || band === "สูง";
+      return { label: language === "en" ? "Firm-level review band" : "ระดับทบทวนของบริษัท", band, reason, extra, attention, extraText: extra ? (language === "en" ? "Additional human investigation: required." : "การตรวจเพิ่มโดยเจ้าหน้าที่: ต้องทำ") : (language === "en" ? "Additional investigation on this question: not indicated." : "คำถามนี้ไม่ต้องตรวจเพิ่ม") };
+    }
+
+    function evidenceFor(arm) {
+      const c = currentCase();
+      return arm >= 3 ? c.verified : c.current;
+    }
+
+    function syncStages() {
+      const isRecorded = $("#decision-receipt").classList.contains("is-visible");
+      document.querySelectorAll(".stage").forEach((stage, index) => {
+        stage.classList.toggle("is-current", index === 3 && !isRecorded);
+        stage.classList.toggle("is-done", index < 3 || (index === 3 && isRecorded));
+      });
+    }
+
+    function render() {
+      const c = currentCase();
+      const arm = arms.find((item) => item.id === selectedArm);
+      const scored = selectedArm === 2 || selectedArm === 4;
+      const evidence = evidenceFor(selectedArm);
+      const triage = triageFor(selectedArm);
+      const route = routeText[selectedRoute];
+
+      $("#case-kicker").textContent = local(c.kicker);
+      $("#case-title").textContent = local(c.title);
+      $("#case-summary").textContent = local(c.summary);
+      $("#case-question").textContent = local(c.question);
+      $("#case-facts").innerHTML = c.facts.map((fact) => `<div class="fact"><dt>${local(fact[0])}</dt><dd>${local(fact[1])}</dd></div>`).join("");
+      document.querySelectorAll("[data-case]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.case === selectedCase)));
+      document.querySelectorAll("[data-experiment]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.experiment === experiment)));
+      document.querySelectorAll("[data-route]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.route === selectedRoute)));
+
+      const experimentNote = experiment === "controlled"
+        ? (language === "en" ? "A / controlled · Arms 2 and 4 share the same transparent rule and thresholds." : "A / ควบคุม · แบบที่ 2 และ 4 ใช้เกณฑ์และจุดตัดเดียวกัน")
+        : (language === "en" ? "B / operational · Participating firms apply their own risk logic to the same cases." : "B / ปฏิบัติงานจริง · บริษัทใช้หลักเกณฑ์ความเสี่ยงของตนกับกรณีเดียวกัน");
+      $("#experiment-note").textContent = experimentNote;
+
+      $("#arms-grid").innerHTML = arms.map((item) => {
+        const result = triageFor(item.id);
+        const isExtra = result.extra;
+        const bandText = item.id === 1 || item.id === 3 ? local(result.band) : `${local(result.band)}`;
+        return `<button type="button" class="arm-card" data-arm="${item.id}" aria-pressed="${item.id === selectedArm}">
+          <span class="arm-number"><span>ARM 0${item.id}</span><span class="arm-marker">${item.id === 2 || item.id === 4 ? (experiment === "controlled" ? "A / B" : "B") : "—"}</span></span>
+          <h3>${local(item.name)}</h3>
+          <span class="arm-mini-evidence">${local(item.short)}</span>
+          <span class="arm-result"><span class="band ${result.attention ? "is-attention" : ""}">${bandText}</span><span class="extra-pill ${isExtra ? "" : "is-none"}">${isExtra ? (language === "en" ? "Extra review" : "ตรวจเพิ่ม") : (language === "en" ? "Routine" : "ขั้นตอนปกติ")}</span></span>
+        </button>`;
+      }).join("");
+      document.querySelectorAll("[data-arm]").forEach((button) => button.addEventListener("click", () => {
+        selectedArm = Number(button.dataset.arm);
+        $("#decision-select").value = "";
+        $("#decision-receipt").classList.remove("is-visible");
+        render();
+      }));
+
+      const routeSelect = local(route.title);
+      $("#route-explainer").textContent = local({en: route.en, th: route.th});
+      $("#flow-route-title").textContent = routeSelect;
+      $("#flow-route-copy").textContent = selectedRoute === "direct"
+        ? `${local(c.routeTarget)} · ${language === "en" ? "scripted response only" : "ใช้คำตอบจำลองเท่านั้น"}`
+        : local({en: route.en, th: route.th});
+
+      $("#selected-arm-kicker").textContent = `ARM 0${selectedArm} · ${local(arm.name).toLocaleUpperCase(language === "th" ? "th-TH" : "en-US")}`;
+      $("#detail-title").textContent = local(c.question);
+      $("#evidence-status").textContent = local(evidence.status);
+      $("#evidence-status").className = `flow-value ${selectedArm >= 3 ? "good" : "warn"}`;
+      $("#evidence-copy").textContent = `${language === "en" ? "Source class" : "ประเภทแหล่งข้อมูล"}: ${selectedArm >= 3 ? (selectedCase === "account" ? "AUTHORITATIVE" : "OFFICIAL FILED RECORD") : (selectedCase === "account" ? "CUSTOMER-PROVIDED" : "OFFICIAL FILED RECORD")}. ${local(evidence.limit)}`;
+      $("#evidence-meta").textContent = `${language === "en" ? "Source" : "แหล่งข้อมูล"}: ${local(evidence.source)} · ${local(evidence.date)} · ${language === "en" ? "Match basis" : "วิธีจับคู่"}: ${local(evidence.basis)}`;
+      $("#triage-title").textContent = local(triage.label);
+      $("#triage-band").textContent = local(triage.band);
+      $("#triage-band").className = `flow-value ${triage.attention ? "warn" : selectedArm === 1 || selectedArm === 3 ? "" : "good"}`;
+      $("#triage-copy").textContent = local(triage.reason);
+      $("#extra-review").textContent = local(triage.extraText);
+      $("#human-copy").textContent = language === "en"
+        ? "Review the permitted evidence, apply firm procedures and record the final customer decision. The score never accepts or rejects an account."
+        : "ตรวจหลักฐานที่ได้รับอนุญาต ใช้ขั้นตอนของบริษัท และบันทึกคำตัดสินใจสุดท้าย คะแนนไม่สามารถรับหรือปฏิเสธบัญชีแทนคนได้";
+      syncStages();
+      $("#decision-form").setAttribute("aria-label", language === "en" ? "Record a human decision for this synthetic case" : "บันทึกคำตัดสินใจของเจ้าหน้าที่สำหรับกรณีสังเคราะห์นี้");
+    }
+
+    document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.lang)));
+    document.querySelectorAll("[data-case]").forEach((button) => button.addEventListener("click", () => {
+      selectedCase = button.dataset.case;
+      selectedArm = 1;
+      selectedRoute = "direct";
+      $("#decision-select").value = "";
+      $("#decision-receipt").classList.remove("is-visible");
+      render();
+    }));
+    document.querySelectorAll("[data-experiment]").forEach((button) => button.addEventListener("click", () => {
+      experiment = button.dataset.experiment;
+      $("#decision-select").value = "";
+      $("#decision-receipt").classList.remove("is-visible");
+      render();
+    }));
+    document.querySelectorAll("[data-route]").forEach((button) => button.addEventListener("click", () => {
+      selectedRoute = button.dataset.route;
+      render();
+    }));
+    $("#decision-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const select = $("#decision-select");
+      if (!select.value) { select.reportValidity(); return; }
+      const option = select.selectedOptions[0];
+      const choice = option.getAttribute(language === "en" ? "data-en" : "data-th");
+      const receipt = $("#decision-receipt");
+      receipt.textContent = language === "en"
+        ? `Human decision recorded in this browser session: “${choice}”. No data was sent or saved.`
+        : `บันทึกคำตัดสินใจของเจ้าหน้าที่ไว้ในหน้าต่างนี้แล้ว: “${choice}” ไม่มีการส่งหรือบันทึกข้อมูลไว้`;
+      receipt.classList.add("is-visible");
+      syncStages();
+    });
+
+    render();
+  </script>
+</body>
+</html>
